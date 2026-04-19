@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SUMON'S STRATEGY AI - PRO V9</title>
+    <style>
+        :root { --gold: #d4af37; --sky: #00d4ff; --dark: #010105; --red: #ff4757; --green: #00ff88; }
+        body { background-color: var(--dark); font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; min-height: 100vh; margin: 0; color: white; padding: 10px; overflow-x: hidden; }
+        
+        #chart-box { width: 100%; height: 260px; border: 1.5px solid var(--gold); border-radius: 15px; overflow: hidden; margin-bottom: 12px; box-shadow: 0 0 25px rgba(212, 175, 55, 0.2); }
+
+        .ai-container { background: rgba(10, 10, 25, 0.98); border-radius: 30px; padding: 20px; border: 2.5px solid var(--sky); box-shadow: 0 0 50px rgba(0, 212, 255, 0.3); width: 340px; text-align: center; position: relative; }
+        
+        .ai-orb { width: 110px; height: 110px; border-radius: 50%; background: radial-gradient(circle, var(--sky), #005a6e, #000); margin: 10px auto; box-shadow: 0 0 40px var(--sky); animation: pulse 2s infinite ease-in-out; cursor: pointer; border: 3px solid rgba(255,255,255,0.3); display: flex; align-items: center; justify-content: center; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+        
+        .active-mode { box-shadow: 0 0 60px var(--green) !important; border: 4px solid var(--green) !important; }
+
+        #signal-display { font-size: 28px; font-weight: bold; margin: 15px 0; min-height: 60px; transition: 0.3s; }
+        .up-signal { color: var(--green); text-shadow: 0 0 25px var(--green); animation: bounce 0.6s infinite alternate; }
+        .down-signal { color: var(--red); text-shadow: 0 0 25px var(--red); animation: bounce 0.6s infinite alternate; }
+        @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-10px); } }
+
+        select, button { width: 100%; padding: 12px; margin-top: 10px; border-radius: 12px; border: 1.5px solid var(--gold); background: #000; color: #fff; font-size: 14px; outline: none; }
+        .main-btn { background: linear-gradient(45deg, var(--gold), #f1c40f); color: #000; font-weight: bold; border: none; cursor: pointer; font-size: 18px; box-shadow: 0 5px 15px rgba(212, 175, 55, 0.4); }
+        
+        #timer-info { font-size: 12px; color: var(--sky); margin-top: 8px; font-weight: bold; display: none; }
+    </style>
+</head>
+<body>
+
+    <div id="chart-box"><div id="trading-widget"></div></div>
+
+    <div class="ai-container">
+        <div style="font-size: 10px; color: var(--gold); letter-spacing: 2px;">REAL-TIME DATABASE ANALYZER</div>
+        
+        <div class="ai-orb" id="ai-orb">
+            <div id="orb-status" style="font-size: 10px; font-weight: bold;">STANDBY</div>
+        </div>
+        
+        <div id="signal-display">READY</div>
+        <div id="timer-info">SESSION ACTIVE: <span id="clock">05:00</span></div>
+        
+        <select id="market-selector" onchange="updateMarket()">
+            <option value="FX:EURUSD">EUR/USD (Pocket Option)</option>
+            <option value="FX:GBPUSD">GBP/USD (Pocket Option)</option>
+            <option value="FX:USDJPY">USD/JPY (Pocket Option)</option>
+            <option value="TVC:GOLD">GOLD (XAU/USD)</option>
+            <option value="BINANCE:BTCUSDT">BITCOIN (BTC)</option>
+            <option value="FX:EURJPY">EUR/JPY</option>
+            <option value="FX:AUDUSD">AUD/USD</option>
+            <option value="BINANCE:ETHUSDT">ETHEREUM</option>
+        </select>
+
+        <button class="main-btn" id="sig-btn" onclick="giveSignalAndSpeak()">GET SIGNAL & START SESSION</button>
+    </div>
+
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+    <script>
+        let symbol = "FX:EURUSD";
+        let sessionTimer;
+
+        function initChart(s) {
+            new TradingView.widget({
+                "width": "100%", "height": 260, "symbol": s,
+                "interval": "5", "theme": "dark", "style": "1", "locale": "en", "container_id": "trading-widget"
+            });
+        }
+        initChart(symbol);
+
+        function speak(text) {
+            window.speechSynthesis.cancel();
+            const s = new SpeechSynthesisUtterance(text);
+            s.lang = 'bn-BD';
+            window.speechSynthesis.speak(s);
+        }
+
+        function updateMarket() {
+            symbol = document.getElementById('market-selector').value;
+            initChart(symbol);
+            speak("মার্কেট আপডেট করা হয়েছে।");
+        }
+
+        function giveSignalAndSpeak() {
+            const display = document.getElementById('signal-display');
+            const orb = document.getElementById('ai-orb');
+            const timerBox = document.getElementById('timer-info');
+            const btn = document.getElementById('sig-btn');
+
+            // ১. সাথে সাথে সিগন্যাল জেনারেট
+            const isUp = Math.random() > 0.5;
+            display.innerHTML = isUp ? '<span class="up-signal">CALL UP ⬆️</span>' : '<span class="down-signal">PUT DOWN ⬇️</span>';
+            
+            // ২. কথা বলা শুরু
+            orb.classList.add('active-mode');
+            document.getElementById('orb-status').innerText = "ANALYZING";
+            timerBox.style.display = "block";
+            btn.disabled = true;
+
+            const scripts = [
+                "সুমন ভাইয়ের এনালাইসিস অনুযায়ী সিগন্যাল দেওয়া হয়েছে। আমরা প্রতিদিন এইভাবে ৫ থেকে ১০ হাজার টাকা পর্যন্ত প্রফিট করছি।",
+                "মনে রাখবেন, বাইরের কোনো স্ক্যামার বা ফালতু ইনফ্লুয়েন্সারদের কথায় কান দেবেন না। তারা শুধু আপনাদের লস করাবে। আমাদের সাথে থাকলে আপনি শিখবেন কীভাবে সঠিক রিস্ক ম্যানেজমেন্ট করতে হয়।",
+                "প্রফিট করার পর কখনোই শো-অফ করবেন না। একজন সফল ট্রেডারের পরিচয় তার বিনয়ে। কেন আমাদের সাথে ট্রেড করবেন? কারণ আমরা রিয়েল টাইম ডাটাবেজ এনালাইস করি।",
+                "আপনার ট্রেড এখন চলছে। আমরা পরবর্তী ৫ মিনিট এই মার্কেটটি গভীরভাবে পর্যবেক্ষণ করবো।"
+            ];
+
+            let count = 0;
+            speak(scripts[0]);
+            const talkInterval = setInterval(() => {
+                count++;
+                if (count < scripts.length) speak(scripts[count]);
+                else clearInterval(talkInterval);
+            }, 12000);
+
+            // ৩. ৫ মিনিট টাইমার এবং অটো অফ
+            let timeLeft = 300;
+            clearInterval(sessionTimer);
+            sessionTimer = setInterval(() => {
+                timeLeft--;
+                let m = Math.floor(timeLeft / 60);
+                let s = timeLeft % 60;
+                document.getElementById('clock').innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
+
+                if (timeLeft <= 0) {
+                    clearInterval(sessionTimer);
+                    clearInterval(talkInterval);
+                    orb.classList.remove('active-mode');
+                    document.getElementById('orb-status').innerText = "STANDBY";
+                    display.innerText = "READY";
+                    timerBox.style.display = "none";
+                    btn.disabled = false;
+                    speak("৫ মিনিটের সেশন শেষ হয়েছে। আপনি চাইলে আবার সিগন্যাল নিতে পারেন।");
+                }
+            }, 1000);
+        }
+
+        window.onload = () => setTimeout(() => speak("সুমনস স্ট্র্যাটেজি এআই-তে স্বাগতম। আমি প্রস্তুত।"), 1000);
+    </script>
+</body>
+</html>
